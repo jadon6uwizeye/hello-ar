@@ -45,9 +45,12 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     
-
+    "rest_framework.authtoken",
     'rest_framework',
     'rest_framework_simplejwt',
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+
     'accounts',
     'service',
 ]
@@ -145,10 +148,21 @@ LOGIN_REDIRECT_URL = "home"
 ACCOUNT_LOGOUT_ON_GET = True
 
 SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': ['email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
-    }
+    "google": {
+        "APP": {
+            "client_id": "27482369075-9opnjll8mopora5v5h4uqnnur36vbd29.apps.googleusercontent.com",  
+            "secret": "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",        
+            "key": "",                               # leave empty
+        },
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "VERIFIED_EMAIL": True,
+    },
 }
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For testing purposes, prints emails to the console
@@ -157,3 +171,9 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # For simplicity, email verification is turned off, you can change it as per your requirements
 SOCIALACCOUNT_QUERY_EMAIL = True
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ]
+}
