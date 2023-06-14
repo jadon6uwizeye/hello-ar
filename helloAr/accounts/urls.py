@@ -3,7 +3,7 @@ from dj_rest_auth.views import LoginView, LogoutView, UserDetailsView
 from django.urls import path
 from allauth.socialaccount.views import signup
 
-from accounts.views import GoogleLogin
+from accounts.views import GoogleLogin, KakaoLogin
 
 
 
@@ -15,4 +15,5 @@ urlpatterns = [
 
     path("signup/", signup, name="socialaccount_signup"),
     path("google/", GoogleLogin.as_view(), name="google_login"),
+    path("kakao/", KakaoLogin.as_view(), name="kakao_login"),
 ]

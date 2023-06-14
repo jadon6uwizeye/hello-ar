@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "allauth.account", # new
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
-    
+    "allauth.socialaccount.providers.kakao",
     "rest_framework.authtoken",
     'rest_framework',
     'rest_framework_simplejwt',
@@ -144,7 +144,7 @@ AUTHENTICATION_BACKENDS = (
 
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = "none"
-LOGIN_REDIRECT_URL = "home"
+# LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGOUT_ON_GET = True
 
 SOCIALACCOUNT_PROVIDERS = {
@@ -167,8 +167,8 @@ SOCIALACCOUNT_PROVIDERS = {
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For testing purposes, prints emails to the console
 
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # For simplicity, email verification is turned off, you can change it as per your requirements
 SOCIALACCOUNT_QUERY_EMAIL = True
 
