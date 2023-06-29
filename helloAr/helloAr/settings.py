@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-)1sf8-4g-qpdv5ne(&g*&y5koh6zol94jrdshaiabhiyg4k%nr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "192.168.88.122",
+    "0.0.0.0",
+    "127.0.0.1"
+]
 
 
 # Application definition
@@ -40,6 +44,8 @@ INSTALLED_APPS = [
 
     "django.contrib.sites",  # new
     # 3rd party
+    'drf_yasg',
+
     "allauth", # new
     "allauth.account", # new
     "allauth.socialaccount",
