@@ -25,11 +25,7 @@ SECRET_KEY = 'django-insecure-)1sf8-4g-qpdv5ne(&g*&y5koh6zol94jrdshaiabhiyg4k%nr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "192.168.88.122",
-    "0.0.0.0",
-    "127.0.0.1"
-]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -56,12 +52,14 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     "dj_rest_auth",
     "dj_rest_auth.registration",
+    'corsheaders',
 
     'accounts',
     'service',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -148,7 +146,7 @@ AUTHENTICATION_BACKENDS = (
     "allauth.account.auth_backends.AuthenticationBackend",
 )
 
-SITE_ID = 1
+SITE_ID = 2
 ACCOUNT_EMAIL_VERIFICATION = "none"
 # LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGOUT_ON_GET = True
@@ -179,7 +177,25 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'  # For simplicity, email verification is tur
 SOCIALACCOUNT_QUERY_EMAIL = True
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-    ]
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'
+    ],
 }
+
+
+# add Media root
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+
+# allow all cors origins
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS=[
+    'http://localhost',
+    'https://f9fc-196-12-131-142.ngrok-free.app',
+]
+

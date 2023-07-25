@@ -7,14 +7,18 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import authentication
+# add media url
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 ...
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="Brainwave API",
+      title="HelloVR API",
       default_version='v1',
-      description="This is the API documentation for the Brainwave API",
+      description="This is the API documentation for the Hello VR API",
       terms_of_service="",
       contact=openapi.Contact(email="jeandedieuuwizeye6@gmail.com"),
       license=openapi.License(name="BSD License"),
@@ -33,3 +37,5 @@ urlpatterns = [
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
