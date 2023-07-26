@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from service.models import ARService, Product, ProductCategory,ProductHealth
+from service.models import ARService, Product, ProductAnalytics, ProductCategory,ProductHealth
 
 
 class ARServiceSerializer(serializers.ModelSerializer):
@@ -79,6 +79,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         many=False,
         read_only=True
     )
+    health_id = serializers.PrimaryKeyRelatedField(
+        many=False,
+        read_only=True,
+        source='health'
+    )
     products = serializers.SerializerMethodField()
     class Meta:
         model = Product
@@ -89,6 +94,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'category',
             'product_link',
             'health',
+            'health_id',
             'products',
             'created_at',
             'updated_at',
@@ -108,5 +114,11 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 class ProductHealthSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductHealth
+        fields =  '__all__'
+
+
+class ProductAnalyticsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductAnalytics
         fields =  '__all__'
 
