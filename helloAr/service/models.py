@@ -34,7 +34,7 @@ class Product(models.Model):
         ('Serviced', 'Serviced'),
         ('UnServiced', 'UnServiced'),
     )
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=100, null=True, blank=True)
     description = models.CharField(max_length=200, null=True, blank=True)
     product_condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, default='Serviced'),

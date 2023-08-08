@@ -25,20 +25,59 @@ class ProductHealtList(generics.ListAPIView):
 
 class ProductListCreate(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by('-updated_at')
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
 
-    # print request body
-    def perform_create(self, serializer):
-        print(self.request.data)
-        serializer.save()
+   
     
     # on get use a different serializer
     def get_serializer_class(self):
         if self.request.method == 'GET':
+            print("get")
             return ProductDetailSerializer
-        return ProductSerializer
+        else:
+            # get update query param if it exists
+            update = self.request.query_params.get('update')
+            print(update)
+            
+            # if the requst has update param in request first delete the existing product
+            if update != None:
+                print("update")
+                if self.request.method == 'POST':
+                    try:
+                        print("delete")
+                        product = Product.objects.get(pk=self.request.data.get('id'))
+                        print(product)
+                        
+                        # delete associated arservices
+                        product_ar_services = product.arservice.filter(
+                            products=product
+                        )
+
+                        # delete product but before remove arservices association
+                        product.arservice.remove(*product_ar_services)
+                        product.delete()
+                        print("deleted")
+                        print(product_ar_services)
+
+                        print("check here")
+
+                        print("here")
+                        print(product_ar_services)
+                        print("here")
+                        # return ProductSerializer and pass context
+                        ProductSerializer.context= {'product_ar_services': product_ar_services,
+                                                    'request': self.request}
+                        
+                        return ProductSerializer
+                    except Product.DoesNotExist:
+                        # raise a 404 exception if product does not exist
+                        raise serializers.ValidationError(
+                            {"error": "Product(Id given) on update does not exist"}
+                    )
+            return ProductSerializer
+        
 
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -46,43 +85,42 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     permission_classes = [IsAuthenticated]
 
-    # if update use different serializer
+    # # if update use different serializer
     # def get_serializer_class(self):
     #     if self.request.method == 'PUT' or self.request.method == 'PATCH':
+    #         # return ProductsUpdateSerializer passing request data
     #         return ProductsUpdateSerializer
     #     return ProductDetailSerializer
-
-    # on put remove associated arservices whcih ar not sent in products array
+    
     def perform_update(self, serializer):
-        try:
-        # if it is patch request then partial update as usual
-            if self.request.method == 'PATCH':
-                serializer.save()
-            
-            # first get the product instance
-            product = Product.objects.get(pk=self.kwargs["pk"])
-            # get the arservices sent in the request from formdata
+        product = self.get_object()
+        # Get the list of ARService IDs from the update request
+        updated_arservices_ids = [arservice['id'] for arservice in self.request.data.get('products', [])]
+        print("updated_arservices_ids ", updated_arservices_ids)
 
-            print(self.request.data)
+        # Get the list of ARServices associated with the product
+        existing_arservices = product.arservice.all()
 
-            arservices = self.request.data["products"]
-            # get the arservices associated with the product
-            # get the arservices as arservice instances from arservices.id
-            arservices = [ARService.objects.get(pk=arservice["id"]) for arservice in arservices]
-            product_arservices = product.arservice.all()
-            # get the arservices to remove as the difference between the two sets
-            arservices_to_remove = set(product_arservices).difference(set(arservices))
-            print(arservices_to_remove)
-            # remove the arservices
-            product.arservice.remove(*arservices_to_remove)
-            # save the product
-            product.save()
-            # save the serializer
-            serializer.save()
-        except Exception as e:
-            # return error if any exception occurs
-            raise serializers.ValidationError({"error": str(e)})
-        
+        for arservice in existing_arservices:
+            print("arservice.id ", arservice.id)
+            if str(arservice.id) not in updated_arservices_ids:
+                print("here")
+                print("arservice.id ", arservice.id)
+                product.arservice.remove(arservice)
+                print("removed")       
+
+        # Find the ARServices that need to be removed
+        # arservices_to_remove = [arservice for arservice in existing_arservices if arservice.id not in updated_arservices_ids]
+        arservices_to_remove = []
+        print("arservices_to_remove ", arservices_to_remove)
+
+        # Remove the ARServices that need to be removed
+        for arservice in arservices_to_remove:
+            product.arservice.remove(arservice)
+
+        # Save the updated product
+        serializer.save()
+
 
 
 # one product detail for unauthenticated users
