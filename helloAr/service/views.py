@@ -39,6 +39,7 @@ class ProductListCreate(generics.ListCreateAPIView):
         else:
             # get update query param if it exists
             update = self.request.query_params.get('update')
+            print("update")
             print(update)
             
             # if the requst has update param in request first delete the existing product
@@ -76,6 +77,7 @@ class ProductListCreate(generics.ListCreateAPIView):
                         raise serializers.ValidationError(
                             {"error": "Product(Id given) on update does not exist"}
                     )
+            ProductSerializer.context= {'request': self.request}
             return ProductSerializer
         
 

@@ -40,6 +40,8 @@ class ProductSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         # try:
+        # print request data
+        print(self.context['request'].data)
         print(validated_data)
         print("before pop")
         # first create arservice instances from products array
@@ -71,7 +73,8 @@ class ProductSerializer(serializers.ModelSerializer):
         product.arservice.set(ar_services_instances)
         # if product_ar_services is there fromm context then add it to product
         if 'product_ar_services' in self.context:
-            print("here")
+            print("here in create")
+            print(self.context['product_ar_services'])
             product.arservice.add(*self.context['product_ar_services'])
 
 
@@ -89,7 +92,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'health_id': product.health.id,
             'category': product.category,
             'product_link': product.product_link,
-            'products': [ARServiceSerializer(product.arservice.all(), many=True).data],
+            'products': ARServiceSerializer(product.arservice.all(), many=True).data,
             "arservice": product.arservice.all(),
             'health': product.health,
             'created_at': product.created_at,
