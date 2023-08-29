@@ -13,6 +13,9 @@ from rest_framework import serializers
 from django.db.models import Count, Sum
 from rest_framework.pagination import PageNumberPagination
 
+from django.db.models import Sum, Min, Max
+from datetime import timedelta
+
 
 
 class ListCategories(generics.ListAPIView):
@@ -205,6 +208,60 @@ def product_analytics(request,pk):
                 "total_rate": product_analytics_queryset.aggregate(total_rate=Sum("purchases")/Sum("views"))['total_rate'],
                 "analytics": product_analytics
                 }
+        )
+    except Exception as e:
+        return Response(
+            status=status.HTTP_400_BAD_REQUEST,
+            data={"error": str(e)}
+        )
+
+
+# @api_view(['GET'])
+# def product_analytics(request, pk):
+    try:
+        product = Product.objects.get(pk=pk)
+        # response to return as JSON of analytics for date ranges: views, purchases, rate and date range
+        product_analytics = []
+        # get the product analytics for the product
+        product_analytics_queryset = ProductAnalytics.objects.filter(product=product)
+
+        # Calculate the date range boundaries
+        min_date = product_analytics_queryset.aggregate(min_date=Min("date"))['min_date']
+        max_date = product_analytics_queryset.aggregate(max_date=Max("date"))['max_date']
+        date_range_size = (max_date - min_date) / 5  # Divide the date range into 5 parts
+
+        for i in range(5):
+            start_date = min_date + i * date_range_size
+            end_date = start_date + date_range_size
+
+            analytics_within_range = product_analytics_queryset.filter(date__gte=start_date, date__lte=end_date)
+            
+            total_views = analytics_within_range.aggregate(total_views=Sum("views"))['total_views']
+            total_purchases = analytics_within_range.aggregate(total_purchases=Sum("purchases"))['total_purchases']
+            
+            if total_views == 0:
+                total_rate = 0  # Avoid division by zero
+            else:
+                total_rate = total_purchases / total_views
+
+            product_analytics.append({
+                "date_range": {
+                    "start_date": start_date.strftime('%Y-%m-%d'),
+                    "end_date": end_date.strftime('%Y-%m-%d')
+                },
+                "views": total_views,
+                "purchases": total_purchases,
+                "rate": total_rate
+            })
+
+        return Response(
+            status=status.HTTP_200_OK,
+            data={
+                "total_views": product_analytics_queryset.aggregate(total_views=Sum("views"))['total_views'],
+                "total_purchases": product_analytics_queryset.aggregate(total_purchases=Sum("purchases"))['total_purchases'],
+                "total_rate": product_analytics_queryset.aggregate(total_rate=Sum("purchases") / Sum("views"))['total_rate'],
+                "analytics": product_analytics
+            }
         )
     except Exception as e:
         return Response(
