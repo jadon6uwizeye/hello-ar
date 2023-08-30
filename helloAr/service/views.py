@@ -83,6 +83,11 @@ class ProductListCreate(generics.ListCreateAPIView):
             ProductSerializer.context= {'request': self.request}
             return ProductSerializer
         
+    def get_queryset(self):
+        queryset = Product.objects.all().order_by('-updated_at').filter(
+            created_by=self.request.user
+        )
+        return queryset
 
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):

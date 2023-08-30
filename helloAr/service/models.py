@@ -1,6 +1,8 @@
 from datetime import timezone, datetime, date
 from django.db import models
 import uuid
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 # Create your models here.
 class ARService(models.Model):
@@ -43,6 +45,7 @@ class Product(models.Model):
     arservice = models.ManyToManyField(ARService, related_name='products')
     product_link = models.URLField(max_length=200, null=True, blank=True)
     created_at = models.DateField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     updated_at = models.DateField(auto_now=True)
 
     # def __str__(self):
