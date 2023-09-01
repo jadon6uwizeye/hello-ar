@@ -209,6 +209,8 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS=[
     'http://localhost',
     'https://f9fc-196-12-131-142.ngrok-free.app',
+    'http://hexontek.com/',
+    'https://hexontek.com/'
 ]
 
 # SECURE_SSL_REDIRECT=False
@@ -217,3 +219,4 @@ CSRF_TRUSTED_ORIGINS=[
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
+

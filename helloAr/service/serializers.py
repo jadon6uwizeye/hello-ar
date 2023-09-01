@@ -14,7 +14,9 @@ class ARServiceSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     products = serializers.ListField( write_only=False)
     arservice = ARServiceSerializer(many=True, read_only=True,source='arservice_set')
-
+    created_by = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
 
     class Meta:
         model = Product
@@ -30,7 +32,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'products',
             'arservice',
             'created_at',
-            'updated_at'
+            'updated_at',
+            'created_by'
         ]
         # make health_id not required
         extra_kwargs = {
