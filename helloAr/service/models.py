@@ -48,8 +48,8 @@ class Product(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     updated_at = models.DateField(auto_now=True)
 
-    # def __str__(self):
-    #     return self.name
+    def __str__(self):
+        return f"{self.category} {self.health}"
 
 class ProductAnalytics(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -61,7 +61,7 @@ class ProductAnalytics(models.Model):
     updated_at = models.DateField(auto_now=True)
     
     def __str__(self):
-        return str(self.product.name) + " " + str(self.date)
+        return str(self.product.category) + " " + str(self.product.health)  + " " + str(self.date)
     
 class UserPlan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
