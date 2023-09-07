@@ -2,7 +2,7 @@ from datetime import date
 from django.shortcuts import render
 from rest_framework import generics
 
-from service.models import ARService, Product, ProductAnalytics,ProductCategory, ProductHealth
+from service.models import ARService, Product, ProductAnalytics,ProductCategory, ProductHealth, UserPlan
 from service.serializers import ARServiceSerializer, ProductDetailSerializer, ProductSerializer,ProductCategorySerializer,ProductHealthSerializer, ProductsUpdateSerializer
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -14,7 +14,7 @@ from django.db.models import Count, Sum
 from rest_framework.pagination import PageNumberPagination
 
 from django.db.models import Sum, Min, Max
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 
 
@@ -185,25 +185,57 @@ def record_purchase_analytics(request, pk):
 
 @api_view(['GET'])
 def product_analytics(request,pk):
-    try:
+   try:
         product = Product.objects.get(pk=pk)
         # response to return as json of analytics product views, purchases, rate and date for each date, total views, total purchases, total rate for each date
         product_analytics = []
         # get the product analytics for the product
         product_analytics_queryset = ProductAnalytics.objects.filter(product=product)
+
+        # Date range filter
+        date_from = request.GET.get('date_from')
+        date_to = request.GET.get('date_to')
+
+        if date_from and date_to:
+            product_analytics_queryset = product_analytics_queryset.filter(date__range=(date_from, date_to))
+        
+        # Last day, last week, last month filter
+        date_filter = request.GET.get('date_filter')
+        today = datetime.now().date()
+
+        if date_filter == 'last_day':
+            product_analytics_queryset = product_analytics_queryset.filter(date=today)
+        elif date_filter == 'last_week':
+            last_week = today - timedelta(days=7)
+            product_analytics_queryset = product_analytics_queryset.filter(date__range=(last_week, today))
+        elif date_filter == 'last_month':
+            last_month = today - timedelta(days=30)
+            product_analytics_queryset = product_analytics_queryset.filter(date__range=(last_month, today))
+
+        # Category filter
+        category = request.GET.get('category')
+
+        if category:
+            product_analytics_queryset = product_analytics_queryset.filter(category=category)
+
         # get the total views and purchases for each date
         total_views = product_analytics_queryset.values("date").annotate(total_views=Sum("views"))
         total_purchases = product_analytics_queryset.values("date").annotate(total_purchases=Sum("purchases"))
         # get the total rate for each date as a fraction of total purchases and total views
         total_rate = product_analytics_queryset.values("date").annotate(total_rate=Sum("purchases")/Sum("views"))
-        # get the total views, purchases and rate for each date
+
+        # Combine the data into the desired format
+        analytics = []
         for i in range(len(total_views)):
-            product_analytics.append({
-                "date": total_views[i]["date"],
-                "views": total_views[i]["total_views"],
-                "purchases": total_purchases[i]["total_purchases"],
-                "rate": total_rate[i]["total_rate"]
-            })
+            date = total_views[i]["date"]
+            views = total_views[i]["total_views"]
+            purchases = total_purchases[i]["total_purchases"]
+            rate = total_rate[i]["total_rate"]
+
+            # Append data to the analytics list in the specified format
+            analytics.append({"date": date, "value": views, "category": "total_views"})
+            analytics.append({"date": date, "value": purchases, "category": "total_purchases"})
+            analytics.append({"date": date, "value": rate, "category": "total_rate"})
 
         return Response(
             status=status.HTTP_200_OK,
@@ -211,63 +243,101 @@ def product_analytics(request,pk):
                 "total_views": product_analytics_queryset.aggregate(total_views=Sum("views"))['total_views'],
                 "total_purchases": product_analytics_queryset.aggregate(total_purchases=Sum("purchases"))['total_purchases'],
                 "total_rate": product_analytics_queryset.aggregate(total_rate=Sum("purchases")/Sum("views"))['total_rate'],
-                "analytics": product_analytics
-                }
+                "analytics": analytics
+            }
         )
-    except Exception as e:
+   except Exception as e:
         return Response(
             status=status.HTTP_400_BAD_REQUEST,
             data={"error": str(e)}
         )
 
 
+
 # @api_view(['GET'])
 # def product_analytics(request, pk):
+    #  try:
+    #     product = Product.objects.get(pk=pk)
+    #     # response to return as json of analytics product views, purchases, rate and date for each date, total views, total purchases, total rate for each date
+    #     product_analytics = []
+    #     # get the product analytics for the product
+    #     product_analytics_queryset = ProductAnalytics.objects.filter(product=product)
+    #     # get the total views and purchases for each date
+    #     total_views = product_analytics_queryset.values("date").annotate(total_views=Sum("views"))
+    #     total_purchases = product_analytics_queryset.values("date").annotate(total_purchases=Sum("purchases"))
+    #     # get the total rate for each date as a fraction of total purchases and total views
+    #     total_rate = product_analytics_queryset.values("date").annotate(total_rate=Sum("purchases")/Sum("views"))
+
+    #     # Combine the data into the desired format
+    #     analytics = []
+    #     for i in range(len(total_views)):
+    #         date = total_views[i]["date"]
+    #         views = total_views[i]["total_views"]
+    #         purchases = total_purchases[i]["total_purchases"]
+    #         rate = total_rate[i]["total_rate"]
+
+    #         # Append data to the analytics list in the specified format
+    #         analytics.append({"date": date, "value": views, "category": "total_views"})
+    #         analytics.append({"date": date, "value": purchases, "category": "total_purchases"})
+    #         analytics.append({"date": date, "value": rate, "category": "total_rate"})
+
+    #     return Response(
+    #         status=status.HTTP_200_OK,
+    #         data={
+    #             "total_views": product_analytics_queryset.aggregate(total_views=Sum("views"))['total_views'],
+    #             "total_purchases": product_analytics_queryset.aggregate(total_purchases=Sum("purchases"))['total_purchases'],
+    #             "total_rate": product_analytics_queryset.aggregate(total_rate=Sum("purchases")/Sum("views"))['total_rate'],
+    #             "analytics": analytics
+    #         }
+    #     )
+    # except Exception as e:
+    #     return Response(
+    #         status=status.HTTP_400_BAD_REQUEST,
+    #         data={"error": str(e)}
+    #     )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_user_plan(request):
     try:
-        product = Product.objects.get(pk=pk)
-        # response to return as JSON of analytics for date ranges: views, purchases, rate and date range
-        product_analytics = []
-        # get the product analytics for the product
-        product_analytics_queryset = ProductAnalytics.objects.filter(product=product)
-
-        # Calculate the date range boundaries
-        min_date = product_analytics_queryset.aggregate(min_date=Min("date"))['min_date']
-        max_date = product_analytics_queryset.aggregate(max_date=Max("date"))['max_date']
-        date_range_size = (max_date - min_date) / 5  # Divide the date range into 5 parts
-
-        for i in range(5):
-            start_date = min_date + i * date_range_size
-            end_date = start_date + date_range_size
-
-            analytics_within_range = product_analytics_queryset.filter(date__gte=start_date, date__lte=end_date)
-            
-            total_views = analytics_within_range.aggregate(total_views=Sum("views"))['total_views']
-            total_purchases = analytics_within_range.aggregate(total_purchases=Sum("purchases"))['total_purchases']
-            
-            if total_views == 0:
-                total_rate = 0  # Avoid division by zero
-            else:
-                total_rate = total_purchases / total_views
-
-            product_analytics.append({
-                "date_range": {
-                    "start_date": start_date.strftime('%Y-%m-%d'),
-                    "end_date": end_date.strftime('%Y-%m-%d')
-                },
-                "views": total_views,
-                "purchases": total_purchases,
-                "rate": total_rate
-            })
-
+        try:
+            user_plan = UserPlan.objects.get(user=request.user)
+            user_plan.plan_id = request.data.get('plan_id')
+            user_plan.save()
+            return Response(
+                status=status.HTTP_200_OK,
+                data={"message": "User plan updated"}
+            )
+        except UserPlan.DoesNotExist:
+            # if user plan does not exist create it
+            user_plan = UserPlan.objects.create(
+                user=request.user,
+                plan_id=request.data.get('plan_id')
+            )
+            return Response(
+                status=status.HTTP_200_OK,
+                data={"message": "User plan created"}
+            )
+    except Exception as e:
         return Response(
-            status=status.HTTP_200_OK,
-            data={
-                "total_views": product_analytics_queryset.aggregate(total_views=Sum("views"))['total_views'],
-                "total_purchases": product_analytics_queryset.aggregate(total_purchases=Sum("purchases"))['total_purchases'],
-                "total_rate": product_analytics_queryset.aggregate(total_rate=Sum("purchases") / Sum("views"))['total_rate'],
-                "analytics": product_analytics
-            }
+            status=status.HTTP_400_BAD_REQUEST,
+            data={"error": str(e)}
         )
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_plan(request):
+    try:
+        try:
+            user_plan = UserPlan.objects.get(user=request.user)
+            return Response(
+                status=status.HTTP_200_OK,
+                data={"plan_id": user_plan.plan_id}
+            )
+        except UserPlan.DoesNotExist:
+            return Response(
+                status=status.HTTP_200_OK,
+                data={"plan_id": None}
+            )
     except Exception as e:
         return Response(
             status=status.HTTP_400_BAD_REQUEST,

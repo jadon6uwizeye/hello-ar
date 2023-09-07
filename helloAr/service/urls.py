@@ -1,4 +1,4 @@
-from service.views import ARServiceDetail, ARServiceListCreate, ProductDetail, ProductDetailUnauthenticated, ProductListCreate,ListCategories,ProductHealtList, record_purchase_analytics, record_view_analytics, product_analytics
+from service.views import ARServiceDetail, ARServiceListCreate, ProductDetail, ProductDetailUnauthenticated, ProductListCreate,ListCategories,ProductHealtList, record_purchase_analytics, record_view_analytics, product_analytics,create_user_plan,get_user_plan
 from django.urls import path
 
 
@@ -13,4 +13,6 @@ urlpatterns = [
     path("product/add/view/<str:pk>", record_view_analytics, name="product_add_view"),
     path("product/add/purchase/<str:pk>", record_purchase_analytics, name="product_add_view"),
     path("product/analytiics/<str:pk>", product_analytics, name="product_analytics"),
+    path("create-plan/", create_user_plan, name="create_plan"),
+    path("get-plan/", get_user_plan, name="get_plan"),
 ]

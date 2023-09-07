@@ -62,3 +62,9 @@ class ProductAnalytics(models.Model):
     
     def __str__(self):
         return str(self.product.name) + " " + str(self.date)
+    
+class UserPlan(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    plan_id = models.IntegerField(null=True, blank=True)
+    plan_start_date = models.DateField(null=True, blank=True, auto_created=True)
+    plan_end_date = models.DateField(null=True, blank=True)
