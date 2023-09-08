@@ -13,9 +13,9 @@ from rest_framework import serializers
 from django.db.models import Count, Sum
 from rest_framework.pagination import PageNumberPagination
 
-from django.db.models import Sum, Min, Max, F, FloatField
+from django.db.models import Sum, Min, Max, F, FloatField,Value
 from datetime import datetime, timedelta
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast,Coalesce
 
 
 
@@ -224,7 +224,7 @@ def product_analytics(request,pk):
         total_purchases = product_analytics_queryset.values("date").annotate(total_purchases=Sum("purchases"))
         # get the total rate for each date as a fraction of total purchases and total views
         total_rate = product_analytics_queryset.values("date").annotate(total_rate=
-                                                                        Cast(Sum("purchases"), FloatField())/Cast(Sum("views"), FloatField()) * 100)
+                                                                        Cast(Coalesce(Sum("purchases"), Value(0)), FloatField())/Cast(Coalesce(Sum("views"), Value(1)), FloatField()) * 100)
 
         # Combine the data into the desired format
         analytics = []
@@ -244,7 +244,7 @@ def product_analytics(request,pk):
             data={
                 "total_views": product_analytics_queryset.aggregate(total_views=Sum("views"))['total_views'],
                 "total_purchases": product_analytics_queryset.aggregate(total_purchases=Sum("purchases"))['total_purchases'],
-                "total_rate": product_analytics_queryset.aggregate(total_rate=Cast(Sum("purchases"), FloatField())/Cast(Sum("views"), FloatField()))['total_rate'] * 100,
+                "total_rate": product_analytics_queryset.aggregate(total_rate=Cast(Coalesce(Sum("purchases"), Value((0))), FloatField())/Cast(Coalesce(Sum("views"), Value(1)), FloatField()))['total_rate'] * 100,
                 "analytics": analytics
             }
         )
