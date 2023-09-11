@@ -220,31 +220,31 @@ def product_analytics(request,pk):
             product_analytics_queryset = product_analytics_queryset.filter(category=category)
 
         # get the total views and purchases for each date
-        total_views = product_analytics_queryset.values("date").annotate(total_views=Sum("views"))
-        total_purchases = product_analytics_queryset.values("date").annotate(total_purchases=Sum("purchases"))
+        total_visitors = product_analytics_queryset.values("date").annotate(total_visitors=Sum("views"))
+        new_visitors = product_analytics_queryset.values("date").annotate(new_visitors=Sum("purchases"))
         # get the total rate for each date as a fraction of total purchases and total views
-        total_rate = product_analytics_queryset.values("date").annotate(total_rate=
+        purchase_rate = product_analytics_queryset.values("date").annotate(purchase_rate=
                                                                         Cast(Coalesce(Sum("purchases"), Value(0)), FloatField())/Cast(Coalesce(Sum("views"), Value(1)), FloatField()) * 100)
 
         # Combine the data into the desired format
         analytics = []
-        for i in range(len(total_views)):
-            date = total_views[i]["date"]
-            views = total_views[i]["total_views"]
-            purchases = total_purchases[i]["total_purchases"]
-            rate = total_rate[i]["total_rate"]
+        for i in range(len(total_visitors)):
+            date = total_visitors[i]["date"]
+            views = total_visitors[i]["total_visitors"]
+            purchases = new_visitors[i]["new_visitors"]
+            rate = purchase_rate[i]["purchase_rate"]
 
             # Append data to the analytics list in the specified format
-            analytics.append({"date": date, "value": views, "category": "total_views"})
-            analytics.append({"date": date, "value": purchases, "category": "total_purchases"})
-            analytics.append({"date": date, "value": rate, "category": "total_rate"})
+            analytics.append({"date": date, "value": views, "category": "total_visitors"})
+            analytics.append({"date": date, "value": purchases, "category": "new_visitors"})
+            analytics.append({"date": date, "value": rate, "category": "purchase_rate"})
 
         return Response(
             status=status.HTTP_200_OK,
             data={
-                "total_views": product_analytics_queryset.aggregate(total_views=Sum("views"))['total_views'],
-                "total_purchases": product_analytics_queryset.aggregate(total_purchases=Sum("purchases"))['total_purchases'],
-                "total_rate": product_analytics_queryset.aggregate(total_rate=Cast(Coalesce(Sum("purchases"), Value((0))), FloatField())/Cast(Coalesce(Sum("views"), Value(1)), FloatField()))['total_rate'] * 100,
+                "total_visitors": product_analytics_queryset.aggregate(total_visitors=Sum("views"))['total_visitors'],
+                "new_visitors": product_analytics_queryset.aggregate(new_visitors=Sum("purchases"))['new_visitors'],
+                "purchase_rate": product_analytics_queryset.aggregate(purchase_rate=Cast(Coalesce(Sum("purchases"), Value((0))), FloatField())/Cast(Coalesce(Sum("views"), Value(1)), FloatField()))['purchase_rate'] * 100,
                 "analytics": analytics
             }
         )
@@ -265,30 +265,30 @@ def product_analytics(request,pk):
     #     # get the product analytics for the product
     #     product_analytics_queryset = ProductAnalytics.objects.filter(product=product)
     #     # get the total views and purchases for each date
-    #     total_views = product_analytics_queryset.values("date").annotate(total_views=Sum("views"))
-    #     total_purchases = product_analytics_queryset.values("date").annotate(total_purchases=Sum("purchases"))
+    #     total_visitors = product_analytics_queryset.values("date").annotate(total_visitors=Sum("views"))
+    #     new_visitors = product_analytics_queryset.values("date").annotate(new_visitors=Sum("purchases"))
     #     # get the total rate for each date as a fraction of total purchases and total views
-    #     total_rate = product_analytics_queryset.values("date").annotate(total_rate=Sum("purchases")/Sum("views"))
+    #     purchase_rate = product_analytics_queryset.values("date").annotate(purchase_rate=Sum("purchases")/Sum("views"))
 
     #     # Combine the data into the desired format
     #     analytics = []
-    #     for i in range(len(total_views)):
-    #         date = total_views[i]["date"]
-    #         views = total_views[i]["total_views"]
-    #         purchases = total_purchases[i]["total_purchases"]
-    #         rate = total_rate[i]["total_rate"]
+    #     for i in range(len(total_visitors)):
+    #         date = total_visitors[i]["date"]
+    #         views = total_visitors[i]["total_visitors"]
+    #         purchases = new_visitors[i]["new_visitors"]
+    #         rate = purchase_rate[i]["purchase_rate"]
 
     #         # Append data to the analytics list in the specified format
-    #         analytics.append({"date": date, "value": views, "category": "total_views"})
-    #         analytics.append({"date": date, "value": purchases, "category": "total_purchases"})
-    #         analytics.append({"date": date, "value": rate, "category": "total_rate"})
+    #         analytics.append({"date": date, "value": views, "category": "total_visitors"})
+    #         analytics.append({"date": date, "value": purchases, "category": "new_visitors"})
+    #         analytics.append({"date": date, "value": rate, "category": "purchase_rate"})
 
     #     return Response(
     #         status=status.HTTP_200_OK,
     #         data={
-    #             "total_views": product_analytics_queryset.aggregate(total_views=Sum("views"))['total_views'],
-    #             "total_purchases": product_analytics_queryset.aggregate(total_purchases=Sum("purchases"))['total_purchases'],
-    #             "total_rate": product_analytics_queryset.aggregate(total_rate=Sum("purchases")/Sum("views"))['total_rate'],
+    #             "total_visitors": product_analytics_queryset.aggregate(total_visitors=Sum("views"))['total_visitors'],
+    #             "new_visitors": product_analytics_queryset.aggregate(new_visitors=Sum("purchases"))['new_visitors'],
+    #             "purchase_rate": product_analytics_queryset.aggregate(purchase_rate=Sum("purchases")/Sum("views"))['purchase_rate'],
     #             "analytics": analytics
     #         }
     #     )
