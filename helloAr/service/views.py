@@ -242,9 +242,9 @@ def product_analytics(request,pk):
         return Response(
             status=status.HTTP_200_OK,
             data={
-                "total_visitors": product_analytics_queryset.aggregate(total_visitors=Sum("views"))['total_visitors'],
-                "new_visitors": product_analytics_queryset.aggregate(new_visitors=Sum("purchases"))['new_visitors'],
-                "purchase_rate": product_analytics_queryset.aggregate(purchase_rate=Cast(Coalesce(Sum("purchases"), Value((0))), FloatField())/Cast(Coalesce(Sum("views"), Value(1)), FloatField()))['purchase_rate'] * 100,
+                "total_views": product_analytics_queryset.aggregate(total_visitors=Sum("views"))['total_visitors'],
+                "total_purchases": product_analytics_queryset.aggregate(new_visitors=Sum("purchases"))['new_visitors'],
+                "total_rate": product_analytics_queryset.aggregate(purchase_rate=Cast(Coalesce(Sum("purchases"), Value((0))), FloatField())/Cast(Coalesce(Sum("views"), Value(1)), FloatField()))['purchase_rate'] * 100,
                 "analytics": analytics
             }
         )
